@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Routing;
-using PokemonReviewApp.Data;
+﻿using PokemonReviewApp.Data;
 using PokemonReviewApp.Interfaces;
 using PokemonReviewApp.Models;
 
@@ -11,6 +10,11 @@ namespace PokemonReviewApp.Repository
         public PokemonRepository(DataContext context)
         {
             _context = context;
+        }
+
+        public bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon)
+        {
+            throw new NotImplementedException();
         }
 
         public Pokemon GetPokemon(int id)
@@ -43,6 +47,12 @@ namespace PokemonReviewApp.Repository
         public bool PokemonExists(int pokeId)
         {
             return _context.Pokemon.Any(p => p.Id == pokeId);
+        }
+
+        public bool Save()
+        {
+            var saved = _context.SaveChanges();
+            return saved > 0 ? true : false;
         }
     }
 }
