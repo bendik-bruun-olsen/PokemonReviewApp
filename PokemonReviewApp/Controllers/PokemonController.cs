@@ -25,7 +25,7 @@ namespace PokemonReviewApp.Controllers
         {
             var pokemons = _mapper.Map<List<PokemonDto>>(_pokemonInterface.GetPokemons());
 
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
@@ -45,7 +45,7 @@ namespace PokemonReviewApp.Controllers
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            
+
             return Ok(pokemon);
         }
 
@@ -53,7 +53,7 @@ namespace PokemonReviewApp.Controllers
         [ProducesResponseType(200, Type = typeof(decimal))]
         [ProducesResponseType(400)]
         public IActionResult GetPokemonRating(int pokeId)
-        { 
+        {
             if (!_pokemonInterface.PokemonExists(pokeId))
                 return NotFound();
 
@@ -71,6 +71,9 @@ namespace PokemonReviewApp.Controllers
         public IActionResult CreatePokemon([FromQuery] int ownerId, [FromQuery] int categoryId, [FromBody] PokemonDto pokemonCreate)
         {
             if (pokemonCreate == null)
+                return BadRequest(ModelState);
+
+            if (ownerId == 0 || categoryId == 0)
                 return BadRequest(ModelState);
 
             var pokemons = _pokemonInterface.GetPokemons().Where(p => p.Name.Trim().ToUpper() == pokemonCreate.Name.Trim().ToUpper()).FirstOrDefault();
