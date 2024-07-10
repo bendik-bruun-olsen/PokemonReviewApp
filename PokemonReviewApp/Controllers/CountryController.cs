@@ -21,6 +21,7 @@ namespace PokemonReviewApp.Controllers
 
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Country>))]
+        [ProducesResponseType(400)]
         public IActionResult GetCountries()
         {
             var countries = _mapper.Map<List<CountryDto>>(_countryInterface.GetCountries());
@@ -33,6 +34,9 @@ namespace PokemonReviewApp.Controllers
 
         [HttpGet("{countryId}")]
         [ProducesResponseType(200, Type = typeof(Country))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+
         public IActionResult GetCountry(int countryId)
         {
             if (!_countryInterface.CountryExists(countryId))
@@ -49,6 +53,7 @@ namespace PokemonReviewApp.Controllers
         [HttpGet("owner/{ownerId}")]
         [ProducesResponseType(200, Type = typeof(Owner))]
         [ProducesResponseType(400)]
+        
         public IActionResult GetCountryByOwner(int ownerId)
         {
             var country = _mapper.Map<CountryDto>(_countryInterface.GetCountryByOwner(ownerId));
@@ -57,6 +62,39 @@ namespace PokemonReviewApp.Controllers
                 return BadRequest(ModelState);
 
             return Ok(country);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(409)]
+        [ProducesResponseType(500)]
+        public IActionResult CreateCountry([FromBody] CountryDto countryCreate)
+        {
+            if (countryCreate == null)
+                return BadRequest(ModelState);
+
+            var existingCountry = _countryInterface.GetCountries().FirstOrDefault(c => c.Name.Trim().ToUpper() == countryCreate.Name.Trim().ToUpper());
+
+
+            if (existingCountry != null)
+            {
+                ModelState.AddModelError("", $"Country '{existingCountry.Name}' already exists");
+                return Conflict(ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var countryMap = _mapper.Map<Country>(countryCreate);
+
+            if (!_countryInterface.CreateCountry(countryMap))
+            {
+                ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
         }
     }
 }

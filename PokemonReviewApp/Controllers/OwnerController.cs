@@ -11,11 +11,13 @@ namespace PokemonReviewApp.Controllers
     public class OwnerController : Controller
     {
         private readonly IOwnerInterface _ownerInterface;
+        private readonly ICountryInterface _countryInterface;
         private readonly IMapper _mapper;
 
-        public OwnerController(IOwnerInterface ownerInterface, IMapper imapper)
+        public OwnerController(IOwnerInterface ownerInterface, ICountryInterface countryInterface, IMapper imapper)
         {
             _ownerInterface = ownerInterface;
+            _countryInterface = countryInterface;
             _mapper = imapper;
         }
 
@@ -62,6 +64,44 @@ namespace PokemonReviewApp.Controllers
                 return BadRequest(ModelState);
 
             return Ok(owner);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(409)]
+        [ProducesResponseType(500)]
+        public IActionResult CreateOwner([FromQuery] int countryId, [FromBody] OwnerDto ownerCreate)
+        {
+            if (ownerCreate == null)
+                return BadRequest(ModelState);
+
+            if (countryId == 0)
+                return BadRequest(ModelState);
+
+            var existingOwner= _ownerInterface.GetOwners().FirstOrDefault(c => c.FirstName.Trim().ToUpper() == ownerCreate.FirstName.Trim().ToUpper() && c.LastName.Trim().ToUpper() == ownerCreate.LastName.Trim().ToUpper());
+
+
+            if (existingOwner != null)
+            {
+                ModelState.AddModelError("", $"Country '{existingOwner.FirstName} {existingOwner.LastName}' already exists");
+                return Conflict(ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var ownerMap = _mapper.Map<Owner>(ownerCreate);
+
+            ownerMap.Country = _countryInterface.GetCountry(countryId);
+
+            if (!_ownerInterface.CreateOwner(ownerMap))
+            {
+                ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
         }
     }
 }
