@@ -6,16 +6,20 @@ using PokemonReviewApp.Models;
 
 namespace PokemonReviewApp.Controllers
 {
-        [Route("api/[controller]")]
-        [ApiController]
+    [Route("api/[controller]")]
+    [ApiController]
     public class ReviewController : Controller
     {
         private readonly IReviewInterface _reviewInterface;
+        private readonly IPokemonInterface _pokemonInterface;
+        private readonly IReviewerInterface _reviewerInterface;
         private readonly IMapper _mapper;
 
-        public ReviewController(IReviewInterface reviewInterface, IMapper mapper)
+        public ReviewController(IReviewInterface reviewInterface, IPokemonInterface pokemonInterface, IReviewerInterface reviewerInterface, IMapper mapper)
         {
             _reviewInterface = reviewInterface;
+            _pokemonInterface = pokemonInterface;
+            _reviewerInterface = reviewerInterface;
             _mapper = mapper;
         }
 
@@ -58,6 +62,39 @@ namespace PokemonReviewApp.Controllers
                 return BadRequest(ModelState);
 
             return Ok(reviews);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public IActionResult CreateReview([FromBody] ReviewDto reviewCreate, [FromQuery] int pokeId, int reviewerId)
+        {
+            if (pokeId == 0 || reviewerId == 0)
+                return BadRequest(ModelState);
+
+            var pokemon = _pokemonInterface.GetPokemon(pokeId);
+            var reviewer = _reviewerInterface.GetReviewer(reviewerId);
+
+            if (pokemon == null || reviewer == null)
+                return NotFound();
+
+            if (reviewCreate == null)
+                return BadRequest(ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var reviewMap = _mapper.Map<Review>(reviewCreate);
+            reviewMap.Pokemon = pokemon;
+            reviewMap.Reviewer = reviewer;
+
+            if (!_reviewInterface.CreateReview(reviewMap))
+            {
+                ModelState.AddModelError("", $"An error occurred while saving");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
         }
 
     }

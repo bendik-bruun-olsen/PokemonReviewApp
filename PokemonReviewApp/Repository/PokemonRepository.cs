@@ -14,8 +14,12 @@ namespace PokemonReviewApp.Repository
 
         public bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon)
         {
-            var pokemonOwnerEntity = _context.Owners.Where(p => p.Id == ownerId).FirstOrDefault();
-            var category = _context.Categories.Where(c => c.Id == categoryId).FirstOrDefault();
+            // var pokemonOwnerEntity = _context.Owners.Where(p => p.Id == ownerId).FirstOrDefault();
+            var pokemonOwnerEntity = _context.Owners.FirstOrDefault(p => p.Id == ownerId);
+
+            // var category = _context.Categories.Where(c => c.Id == categoryId).FirstOrDefault();
+            var category = _context.Categories.FirstOrDefault(c => c.Id == categoryId);
+
 
             var pokemonOwner = new PokemonOwner()
             {

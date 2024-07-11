@@ -20,10 +20,20 @@ builder.Services.AddScoped<IReviewerInterface, ReviewerRepository>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<DataContext>(options =>
+
+var connection = String.Empty;
+if (builder.Environment.IsDevelopment())
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+    builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
+    connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
+}
+else
+{
+    connection = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING");
+}
+
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseSqlServer(connection));
 
 var app = builder.Build();
 
@@ -47,6 +57,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//app.UseSwagger();
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwaggerUI();
+//}
+//if (!app.Environment.IsDevelopment())
+//{
+//    app.UseSwaggerUI(options =>
+//    {
+//        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+//        options.RoutePrefix = string.Empty;
+//    });
+//}
+
 
 app.UseHttpsRedirection();
 
