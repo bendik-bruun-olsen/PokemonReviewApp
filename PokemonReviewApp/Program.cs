@@ -1,10 +1,15 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
 using PokemonReviewApp;
 using PokemonReviewApp.Data;
 using PokemonReviewApp.Interfaces;
 using PokemonReviewApp.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 
 // Add services to the container.
 
@@ -22,21 +27,21 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var connection = String.Empty;
-//if (builder.Environment.IsDevelopment())
-//{
-//    builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
-//    connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
-//}
-//else
-//{
-//    connection = Environment.GetEnvironmentVariable("ConnectionStrings:AZURE_SQL_CONNECTIONSTRING");
-//}
 
-builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
-connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
+    connection = builder.Configuration.GetConnectionString("DefaultConnection");
+}
+else
+{
+    builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.json");
+    connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
+}
 
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(connection));
+options.UseSqlServer(connection));
 
 var app = builder.Build();
 
@@ -55,12 +60,6 @@ void SeedData(IHost app)
 }
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
-
 app.UseSwagger();
 if (app.Environment.IsDevelopment())
 {
@@ -77,6 +76,8 @@ if (!app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

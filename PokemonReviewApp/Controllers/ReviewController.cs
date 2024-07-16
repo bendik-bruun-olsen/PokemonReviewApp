@@ -88,7 +88,9 @@ namespace PokemonReviewApp.Controllers
             reviewMap.Pokemon = pokemon;
             reviewMap.Reviewer = reviewer;
 
-            if (!_reviewInterface.CreateReview(reviewMap))
+            bool reviewCreated = _reviewInterface.CreateReview(reviewMap);
+
+            if (!reviewCreated)
             {
                 ModelState.AddModelError("", $"An error occurred while saving");
                 return StatusCode(500, ModelState);

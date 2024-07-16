@@ -62,8 +62,6 @@ namespace PokemonReviewApp.Repository
             return ((decimal)review.Sum(r => r.Rating) / review.Count());
         }
 
-
-
         public ICollection<Pokemon> GetPokemons()
         {
             return _context.Pokemon.OrderBy(p => p.Id).ToList();
@@ -77,7 +75,13 @@ namespace PokemonReviewApp.Repository
         public bool Save()
         {
             var saved = _context.SaveChanges();
-            return saved > 0 ? true : false;
+            return saved > 0;
+        }
+
+        public bool UpdatePokemon(int ownerId, int categoryId, Pokemon pokemon)
+        {
+            _context.Update(pokemon);
+            return Save();
         }
     }
 }

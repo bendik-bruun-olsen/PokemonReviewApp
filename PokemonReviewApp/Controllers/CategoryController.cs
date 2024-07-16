@@ -22,7 +22,7 @@ namespace PokemonReviewApp.Controllers
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Category>))]
         public IActionResult GetCategories()
-        { 
+        {
             var categories = _mapper.Map<List<CategoryDto>>(_categoryInterface.GetCategories());
 
             if (!ModelState.IsValid)
@@ -48,7 +48,7 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpGet("pokemon/{categoryId}")]
-        [ProducesResponseType(200, Type= typeof(IEnumerable<Pokemon>))]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Pokemon>))]
         [ProducesResponseType(400)]
         public IActionResult GetPokemonByCategory(int categoryId)
         {
@@ -88,6 +88,35 @@ namespace PokemonReviewApp.Controllers
             var categoryMap = _mapper.Map<Category>(categoryCreate);
 
             if (!_categoryInterface.CreateCategory(categoryMap))
+            {
+                ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpPut("{categoryId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult UpdateCategory(int categoryId, [FromBody] CategoryDto categoryUpdate)
+        {
+            if (categoryUpdate == null)
+                return BadRequest(ModelState);
+
+            if (categoryId != categoryUpdate.Id)
+                return BadRequest(ModelState);
+
+            if (!_categoryInterface.CategoryExists(categoryId))
+                return NotFound();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var categoryMap = _mapper.Map<Category>(categoryUpdate);
+
+            if (!_categoryInterface.UpdateCategory(categoryMap))
             {
                 ModelState.AddModelError("", "An error occurred while saving the data.");
                 return StatusCode(500, ModelState);

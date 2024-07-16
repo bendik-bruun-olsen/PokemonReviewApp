@@ -53,7 +53,7 @@ namespace PokemonReviewApp.Controllers
         [HttpGet("owner/{ownerId}")]
         [ProducesResponseType(200, Type = typeof(Owner))]
         [ProducesResponseType(400)]
-        
+
         public IActionResult GetCountryByOwner(int ownerId)
         {
             var country = _mapper.Map<CountryDto>(_countryInterface.GetCountryByOwner(ownerId));
@@ -89,6 +89,35 @@ namespace PokemonReviewApp.Controllers
             var countryMap = _mapper.Map<Country>(countryCreate);
 
             if (!_countryInterface.CreateCountry(countryMap))
+            {
+                ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpPut("{countryId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult UpdateCountry(int countryId, [FromBody] CountryDto countryUpdate)
+        {
+            if (countryUpdate == null)
+                return BadRequest(ModelState);
+
+            if (countryId != countryUpdate.Id)
+                return BadRequest(ModelState);
+
+            if (!_countryInterface.CountryExists(countryId))
+                return NotFound();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var countryMap = _mapper.Map<Country>(countryUpdate);
+
+            if (!_countryInterface.UpdateCountry(countryMap))
             {
                 ModelState.AddModelError("", "An error occurred while saving the data.");
                 return StatusCode(500, ModelState);

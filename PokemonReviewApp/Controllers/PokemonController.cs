@@ -11,11 +11,15 @@ namespace PokemonReviewApp.Controllers
     public class PokemonController : Controller
     {
         private readonly IPokemonInterface _pokemonInterface;
+        private readonly IOwnerInterface _ownerInterface;
+        private readonly IReviewInterface _reviewInterface;
         private readonly IMapper _mapper;
 
-        public PokemonController(IPokemonInterface pokemonRepository, IMapper mapper)
+        public PokemonController(IPokemonInterface pokemonRepository, IOwnerInterface ownerInterface, IReviewInterface reviewInterface, IMapper mapper)
         {
             _pokemonInterface = pokemonRepository;
+            _ownerInterface = ownerInterface;
+            _reviewInterface = reviewInterface;
             _mapper = mapper;
         }
 
@@ -96,6 +100,35 @@ namespace PokemonReviewApp.Controllers
             }
 
             return Ok("Pokemon Created Successfully");
+        }
+
+        [HttpPut("{pokeId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult UpdatePokemon(int pokeId, [FromQuery] int ownerId, int categoryId, [FromBody] PokemonDto pokemonUpdate)
+        {
+            if (pokemonUpdate == null)
+                return BadRequest(ModelState);
+
+            if (pokeId != pokemonUpdate.Id)
+                return BadRequest(ModelState);
+
+            if (!_pokemonInterface.PokemonExists(pokeId))
+                return NotFound();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var pokemonMap = _mapper.Map<Pokemon>(pokemonUpdate);
+
+            if (!_pokemonInterface.UpdatePokemon(ownerId, categoryId, pokemonMap))
+            {
+                ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
         }
     }
 }

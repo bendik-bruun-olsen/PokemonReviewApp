@@ -79,7 +79,7 @@ namespace PokemonReviewApp.Controllers
             if (countryId == 0)
                 return BadRequest(ModelState);
 
-            var existingOwner= _ownerInterface.GetOwners().FirstOrDefault(c => c.FirstName.Trim().ToUpper() == ownerCreate.FirstName.Trim().ToUpper() && c.LastName.Trim().ToUpper() == ownerCreate.LastName.Trim().ToUpper());
+            var existingOwner = _ownerInterface.GetOwners().FirstOrDefault(c => c.FirstName.Trim().ToUpper() == ownerCreate.FirstName.Trim().ToUpper() && c.LastName.Trim().ToUpper() == ownerCreate.LastName.Trim().ToUpper());
 
 
             if (existingOwner != null)
@@ -96,6 +96,35 @@ namespace PokemonReviewApp.Controllers
             ownerMap.Country = _countryInterface.GetCountry(countryId);
 
             if (!_ownerInterface.CreateOwner(ownerMap))
+            {
+                ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpPut("{ownerId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult UpdateOwner(int ownerId, [FromBody] OwnerDto ownerUpdate)
+        {
+            if (ownerUpdate == null)
+                return BadRequest(ModelState);
+
+            if (ownerId != ownerUpdate.Id)
+                return BadRequest(ModelState);
+
+            if (!_ownerInterface.OwnerExists(ownerId))
+                return NotFound();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var ownerMap = _mapper.Map<Owner>(ownerUpdate);
+
+            if (!_ownerInterface.UpdateOwner(ownerMap))
             {
                 ModelState.AddModelError("", "An error occurred while saving the data.");
                 return StatusCode(500, ModelState);

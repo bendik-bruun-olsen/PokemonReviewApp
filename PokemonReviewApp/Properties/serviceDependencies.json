@@ -1,16 +1,24 @@
 {
   "dependencies": {
     "secrets1": {
-      "type": "secrets"
+      "type": "secrets",
+      "dynamicId": null
     },
     "compute.appService1": {
       "group": "connections",
-      "type": "compute.appService",
-      "connectionId": null
+      "type": "compute.appService"
+    },
+    "identityapp1": {
+      "type": "identityapp"
     },
     "mssql1": {
       "type": "mssql",
-      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING"
+      "connectionId": "AZURE_SQL_CONNECTIONSTRING"
+    },
+    "mssql2": {
+      "type": "mssql",
+      "connectionId": "AZURE_SQL_CONNECTIONSTRING",
+      "dynamicId": null
     }
   }
 }
