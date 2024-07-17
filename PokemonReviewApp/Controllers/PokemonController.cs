@@ -11,14 +11,12 @@ namespace PokemonReviewApp.Controllers
     public class PokemonController : Controller
     {
         private readonly IPokemonInterface _pokemonInterface;
-        private readonly IOwnerInterface _ownerInterface;
         private readonly IReviewInterface _reviewInterface;
         private readonly IMapper _mapper;
 
-        public PokemonController(IPokemonInterface pokemonRepository, IOwnerInterface ownerInterface, IReviewInterface reviewInterface, IMapper mapper)
+        public PokemonController(IPokemonInterface pokemonRepository, IReviewInterface reviewInterface, IMapper mapper)
         {
             _pokemonInterface = pokemonRepository;
-            _ownerInterface = ownerInterface;
             _reviewInterface = reviewInterface;
             _mapper = mapper;
         }
@@ -125,6 +123,38 @@ namespace PokemonReviewApp.Controllers
             if (!_pokemonInterface.UpdatePokemon(ownerId, categoryId, pokemonMap))
             {
                 ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{pokeId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public IActionResult DeletePokemon(int pokeId)
+        {
+            if (!_pokemonInterface.PokemonExists(pokeId))
+                return NotFound();
+
+            var reviews = _reviewInterface.GetReviewsByPokemon(pokeId);
+
+            if (reviews.Count > 0)
+            {
+                if (!_reviewInterface.DeleteReviews(reviews))
+                {
+                    ModelState.AddModelError("", $"Something went wrong deleting the reviews for the pokemon {pokeId}");
+                    return StatusCode(500, ModelState);
+                }
+
+            }
+
+            var pokemon = _pokemonInterface.GetPokemon(pokeId);
+
+            if (!_pokemonInterface.DeletePokemon(pokemon))
+            {
+                ModelState.AddModelError("", $"Something went wrong deleting the pokemon {pokemon.Name}");
                 return StatusCode(500, ModelState);
             }
 

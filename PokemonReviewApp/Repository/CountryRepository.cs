@@ -28,6 +28,12 @@ namespace PokemonReviewApp.Repository
             return Save();
         }
 
+        public bool DeleteCountry(Country country)
+        {
+            _context.Remove(country);
+            return Save();
+        }
+
         public ICollection<Country> GetCountries()
         {
             return _context.Countries.ToList();
@@ -43,7 +49,7 @@ namespace PokemonReviewApp.Repository
             return _context.Owners.Where(o => o.Id == ownerId).Select(c => c.Country).FirstOrDefault();
         }
 
-        public ICollection<Owner> GetOwnerFromACountry(int countryId)
+        public ICollection<Owner> GetOwnersFromCountry(int countryId)
         {
             return _context.Owners.Where(c => c.Country.Id == countryId).ToList();
         }

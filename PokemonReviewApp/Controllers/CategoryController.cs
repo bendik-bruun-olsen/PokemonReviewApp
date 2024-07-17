@@ -124,5 +124,36 @@ namespace PokemonReviewApp.Controllers
 
             return NoContent();
         }
+
+        [HttpDelete("{categoryId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(409)]
+        [ProducesResponseType(500)]
+        public IActionResult DeleteCategory(int categoryId)
+        {
+            if (!_categoryInterface.CategoryExists(categoryId))
+                return NotFound();
+
+            var category = _categoryInterface.GetCategory(categoryId);
+
+            if (_categoryInterface.GetPokemonByCategory(categoryId).Count > 0)
+            {
+                ModelState.AddModelError("", $"Category '{category.Name}' cannot be deleted because it is associated with at least one Pokemon");
+                return StatusCode(409, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!_categoryInterface.DeleteCategory(category))
+            {
+                ModelState.AddModelError("", "An error occurred while deleting the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
     }
 }

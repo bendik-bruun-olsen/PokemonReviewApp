@@ -11,11 +11,13 @@ namespace PokemonReviewApp.Controllers
     public class CountryController : Controller
     {
         private readonly ICountryInterface _countryInterface;
+        private readonly IOwnerInterface _ownerInterface;
         private readonly IMapper _mapper;
 
-        public CountryController(ICountryInterface countryInterface, IMapper mapper)
+        public CountryController(ICountryInterface countryInterface, IOwnerInterface ownerInterface, IMapper mapper)
         {
             _countryInterface = countryInterface;
+            _ownerInterface = ownerInterface;
             _mapper = mapper;
         }
 
@@ -53,15 +55,35 @@ namespace PokemonReviewApp.Controllers
         [HttpGet("owner/{ownerId}")]
         [ProducesResponseType(200, Type = typeof(Owner))]
         [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
 
         public IActionResult GetCountryByOwner(int ownerId)
         {
+            if (!_ownerInterface.OwnerExists(ownerId))
+                return NotFound();
+
             var country = _mapper.Map<CountryDto>(_countryInterface.GetCountryByOwner(ownerId));
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             return Ok(country);
+        }
+
+        [HttpGet("{countryId}/owners")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Owner>))]
+        [ProducesResponseType(400)]
+        public IActionResult GetOwnersFromCountry(int countryId)
+        {
+            if (!_countryInterface.CountryExists(countryId))
+                return NotFound();
+
+            var owners = _mapper.Map<List<OwnerDto>>(_countryInterface.GetOwnersFromCountry(countryId));
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(owners);
         }
 
         [HttpPost]
@@ -120,6 +142,37 @@ namespace PokemonReviewApp.Controllers
             if (!_countryInterface.UpdateCountry(countryMap))
             {
                 ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{countryId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(409)]
+        [ProducesResponseType(500)]
+        public IActionResult DeleteCountry(int countryId)
+        {
+            if (!_countryInterface.CountryExists(countryId))
+                return NotFound();
+
+            var country = _countryInterface.GetCountry(countryId);
+
+            if (_countryInterface.GetOwnersFromCountry(countryId).Count > 0)
+            {
+                ModelState.AddModelError("", $"Country '{country.Name}' cannot be deleted because it is associated with at least one Owner");
+                return StatusCode(409, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!_countryInterface.DeleteCountry(country))
+            {
+                ModelState.AddModelError("", "An error occurred while deleting the data.");
                 return StatusCode(500, ModelState);
             }
 

@@ -11,11 +11,13 @@ namespace PokemonReviewApp.Controllers
     public class ReviewerController : Controller
     {
         private readonly IReviewerInterface _reviewerInterface;
+        private readonly IReviewInterface _reviewInterface;
         private readonly IMapper _mapper;
 
-        public ReviewerController(IReviewerInterface reviewerInterface, IMapper mapper)
+        public ReviewerController(IReviewerInterface reviewerInterface, IReviewInterface reviewInterface, IMapper mapper)
         {
             _reviewerInterface = reviewerInterface;
+            _reviewInterface = reviewInterface;
             _mapper = mapper;
         }
 
@@ -118,6 +120,38 @@ namespace PokemonReviewApp.Controllers
             if (!_reviewerInterface.UpdateReviewer(reviewerMap))
             {
                 ModelState.AddModelError("", "An error occurred while saving the data.");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{reviewerId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public IActionResult DeleteReviewer(int reviewerId)
+        {
+            if (!_reviewerInterface.ReviewerExists(reviewerId))
+                return NotFound();
+
+            var reviews = _reviewerInterface.GetReviewsByReviewer(reviewerId);
+
+            if (reviews.Count > 0)
+            {
+                if (!_reviewInterface.DeleteReviews(reviews))
+                {
+                    ModelState.AddModelError("", "An error occurred while deleting the data.");
+                    return StatusCode(500, ModelState);
+                }
+            }
+
+            var reviewer = _reviewerInterface.GetReviewer(reviewerId);
+
+            if (!_reviewerInterface.DeleteReviewer(reviewer))
+            {
+                ModelState.AddModelError("", "An error occurred while deleting the data.");
                 return StatusCode(500, ModelState);
             }
 
