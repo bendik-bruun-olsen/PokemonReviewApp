@@ -34,6 +34,7 @@ namespace PokemonReviewApp.Controllers
         [HttpGet("{categoryId}")]
         [ProducesResponseType(200, Type = typeof(Category))]
         [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         public IActionResult GetCategory(int categoryId)
         {
             if (!_categoryInterface.CategoryExists(categoryId))
@@ -50,6 +51,7 @@ namespace PokemonReviewApp.Controllers
         [HttpGet("pokemon/{categoryId}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Pokemon>))]
         [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         public IActionResult GetPokemonByCategory(int categoryId)
         {
             if (!_categoryInterface.CategoryExists(categoryId))
@@ -100,6 +102,7 @@ namespace PokemonReviewApp.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public IActionResult UpdateCategory(int categoryId, [FromBody] CategoryDto categoryUpdate)
         {
             if (categoryUpdate == null)
