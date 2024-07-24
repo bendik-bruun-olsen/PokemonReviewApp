@@ -449,9 +449,7 @@
 - **Properties**:
   - `id` (integer)
   - `name` (string, nullable)
-  - `birthDate
-
-` (string, date-time)
+  - `birthDate` (string, date-time)
   - `reviews` (array, nullable)
   - `pokemonOwners` (array, nullable)
   - `pokemonCategories` (array, nullable)
